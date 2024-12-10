@@ -1,4 +1,4 @@
-package com.bookstore
+package com.example.bookStore
 
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate

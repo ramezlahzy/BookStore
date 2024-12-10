@@ -1,9 +1,13 @@
 import React from 'react';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
 
-const LoadingModal = ({ isVisible }) => {
+const LoadingModal = ({ isVisible }:
+    {
+        isVisible: boolean,
+    }
+) => {
     if (!isVisible) return null;
-    
+
     return (
         <View style={styles.container}>
             <View style={styles.loadingBox}>

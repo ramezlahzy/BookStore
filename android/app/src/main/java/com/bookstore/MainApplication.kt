@@ -1,4 +1,4 @@
-package com.bookstore
+package com.example.bookStore
 
 import android.app.Application
 import com.facebook.react.PackageList

@@ -16,15 +16,8 @@ export default StyleSheet.create({
         margin: 30
     },
     input: {
-        height: 48,
-        borderRadius: 5,
-        overflow: 'hidden',
-        backgroundColor: 'white',
-        marginTop: 10,
-        marginBottom: 10,
-        marginLeft: 30,
-        marginRight: 30,
-        paddingLeft: 16
+        marginTop: 20, height: 50, borderColor: '#6C6A6A', borderWidth: 1, borderRadius: 10, paddingHorizontal: 10,
+        color: 'black', textAlign: 'right'
     },
     button: {
         backgroundColor: '#788eec',

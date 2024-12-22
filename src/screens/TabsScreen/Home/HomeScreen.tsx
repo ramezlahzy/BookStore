@@ -3,283 +3,113 @@ import {
     Text,
     ScrollView,
     Image,
-    TouchableOpacity,
-    StyleSheet,
-    FlatList, RefreshControl, Platform,
-    Alert,
+    RefreshControl,
 } from "react-native";
 
-import React, { useCallback, useEffect, useRef, useState } from "react";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { useRoute, useTheme } from "@react-navigation/native";
-import { BottomSheetModal, BottomSheetScrollView } from "@gorhom/bottom-sheet";
-import CustomBackdrop from "../../../components/CustomBackdrop";
-import FilterView from "../../../components/FilterView"
+import React, { useCallback, useEffect, useState } from "react";
+import { useFocusEffect, useTheme } from "@react-navigation/native";
 import { FlaTCategories, Items } from "../../../components/AllItems"
-import {
-    // displayAd,
-    // getLanguage,
-    loadAllCategories,
-    loadAllProducts,
-    loadBestSales,
-    loadUser,
-    // translate
-} from "../../../BackEnd/Gets";
-import LoadingHomeScreen from "./LoadingHomeScreen";
-import { auth } from "../../../firebase/config";
-import { BestChoice, Minus, Setting } from "../../../../assets";
+import { BestChoice } from "../../../../assets";
 import i18n from "../../../i18n";
-import HandleProduct from "./HandleProduct";
 import AddButton from "../../../components/Add";
+import { useQuery } from "@tanstack/react-query";
+import LoadingModal from "../../../utils/LoadingModal";
+import { ProductType } from "../../../types/types/product.types";
+import { FilterButton, Header } from "./HomeScreenComponents";
+import { fetchProducts } from "../../../api/products";
+import { auth } from "../../../firebase/config";
 
 
 const HomeScreen = ({ navigation, extraData }: any) => {
     const { colors } = useTheme();
-    console.log('extraData', extraData)
 
-    const [loading, setLoading] = useState(false);
-    const [userProfile, setUserProfile] = useState({});
-    const [profileImage, setProfileImage] = useState('null');
     const [profileName, setProfileName] = useState(extraData?.fullName);
-    const [allProducts, setAllProducts] = useState([]);
-    const [selectedCategory, setSelectedCategory] = useState('all');
-    const [allCategories, setAllCategories] = useState<string[]>([]);
+    const [allProducts, setAllProducts] = useState<ProductType[]>([]);
+    const productQuery = useQuery({
+        queryKey: ['products'],
+        queryFn: fetchProducts
+    });
+    // Refresh data whenever the screen is focused
+    useFocusEffect(
+        useCallback(() => {
+            productQuery.refetch();
+        }, [])
+    );
 
-    const [allProductsShuffled, setAllProductsShuffled] = useState([]);
-    const [isLoadingHome, setIsLoadingHome] = useState(false);
-    const [salesProductsShuffled, setSalesProductsShuffled] = useState([]);
-    const [existFilter, setExistFilter] = useState(false);
-    const [filter, setFilter] = useState({});
-
-    useEffect(() => {
-        setProfileImage('https://www')
-        setProfileName(extraData?.fullName)
-    }, [userProfile])
-    useEffect(() => {
-        const shuffled = allProducts.sort(() => 0.5 - Math.random());
-        // if (selectedCategory === translate('all',getLanguage())) {
-        //     setAllProductsShuffled(shuffled)
-        // } else if (selectedCategory === translate('sale',getLanguage())) {
-        //     const products = shuffled.filter(product => product.existSale)
-        //     setAllProductsShuffled(products)
-        // } else {
-        //     const products = shuffled.filter(product => product.category === selectedCategory)
-        //     setAllProductsShuffled(products)
-        // }
-    }, [allProducts, selectedCategory])
-    useEffect(() => {
-        setIsLoadingHome(true)
-        loadAllProducts(setAllProducts).then(r => {
-            loadAllCategories(setAllCategories).then(r => {
-                setIsLoadingHome(false)
-            }).catch(e => {
-                setIsLoadingHome(false)
-            })
-        }).catch(e => {
-            setIsLoadingHome(false)
-        })
-    }, [])
+    const isAnonymous = auth.currentUser?.isAnonymous;
 
 
 
-    const bottomSheetModalRef = useRef<BottomSheetModal>(null);
 
-    const refresh = () => {
-        setLoading(true);
-        loadAllProducts(setAllProducts).then(r => {
-            loadAllCategories(setAllCategories).then(r => {
-                setLoading(false)
-                setIsLoadingHome(false)
-            })
-        })
-            .catch(e => {
-                setLoading(false)
-                setIsLoadingHome(false)
-                setIsLoadingHome(false)
-            });
-    }
+    const [filter, setFilter] = useState<
+        {
+            categories: string[],
+            languages: string[],
+        }>
+        ({
+            categories: [],
+            languages: [],
+        });
 
-    const openFilterModal = useCallback(() => {
-        if (bottomSheetModalRef.current) {
-            bottomSheetModalRef.current.present();
-        }
-    }, []);
 
-    const closeFilterModal = useCallback(() => {
-        if (bottomSheetModalRef.current) {
-            bottomSheetModalRef.current.close();
-        }
-    }, []);
-
-   
     return (
         <View style={{ flex: 1 }}>
-            <AddButton openAddModel={() => {
-                navigation.navigate('AddProduct')
+            {
+                !isAnonymous &&
+                <AddButton openAddModel={() => {
+                    navigation.navigate('AddProduct')
+                }} />}
 
-            }
-            } />
             <ScrollView
+
                 refreshControl={
                     <RefreshControl
-                        refreshing={loading}
-                        onRefresh={refresh}
+                        refreshing={productQuery.isFetching}
+                        onRefresh={() => {
+                            productQuery.refetch()
+                            setFilter({
+                                categories: [],
+                                languages: [],
+                            })
+                        }}
                     />
                 }
-                style={{ flex: 1, backgroundColor: colors.background }}
-
+                style={{ flex: 1, backgroundColor: colors.background, paddingTop: 25 }}
             >
-                <SafeAreaView style={{
-                    paddingVertical: 24, gap: 24,
-                }}>
-                    <>
-                        <View
-                            style={{
-                                paddingHorizontal: 24,
-                                flexDirection: "row",
-                                gap: 8,
-                            }}
-                        >
-
-                            <View style={{ flex: 1 }}>
-                                <Text
-                                    style={{
-                                        fontSize: 18,
-                                        fontWeight: "600",
-                                        marginBottom: 8,
-                                        color: colors.text,
-                                    }}
-                                    numberOfLines={1}
-                                >
-                                    {
-
-                                        i18n.t('hi') + ', ' + profileName + ' 👋'
-                                    }
-                                </Text>
-                                <Text
-                                    style={{ color: colors.text, opacity: 0.75 }}
-                                    numberOfLines={1}
-                                >
-                                    {
-                                        i18n.t('findYourBook')
-                                    }
-                                    {/* {translate('discover_new_fashion',getLanguage())} */}
-                                </Text>
-                            </View>
-
-                        </View>
-                    </>
-                    <TouchableOpacity
-                        style={{
-                            width: '90%',
-                            display: 'flex',
-                            flexDirection: 'row',
-                            justifyContent: 'space-between',
-                            borderRadius: 52,
-                            // backgroundColor:'white',
-                            shadowColor: "#000",
-                            backgroundColor: existFilter ? colors.primary : 'white',
-                            elevation: 5,
-                            alignSelf: 'center',
-                        }}
-                        onPress={() =>
-                            existFilter ?
-                                setExistFilter(false)
-                                :
-                                openFilterModal()
-                        }
+                <Header profileName={profileName}
+                    navigation={navigation}
+                />
+                <FilterButton setFilter={setFilter} filter={filter} />
+                <View style={{ paddingHorizontal: 24 }}>
+                    <Text
+                        style={{ fontSize: 20, fontWeight: "700", color: colors.text, paddingTop: 10 }}
                     >
-
-                        <View
-                            style={{
-                                flex: 1,
-                                display: 'flex',
-                                alignSelf: 'center',
-                                justifyContent: 'center',
-                            }}
-                        >
-                            <Text
-                                style={{
-                                    fontSize: 20,
-                                    fontWeight: "600",
-                                    color: existFilter ? 'white' : 'black',
-                                    textAlign: 'center',
-                                }}
-                            >
-                                {
-                                    existFilter ?
-                                        i18n.t('removeFilter')
-                                        :
-                                        i18n.t('filter')
-                                }
-                            </Text>
-                        </View>
-                        <View
-                            style={{
-                                width: 52,
-                                aspectRatio: 1,
-                                alignItems: "center",
-                                justifyContent: "center",
-                                borderRadius: 52,
-                                backgroundColor: existFilter ? 'white' : colors.primary,
-                            }}
-                        >
-                            <Image
-                                source={existFilter ? Minus : Setting}
-                                style={{
-                                    width: 24, aspectRatio: 1, borderRadius: 24,
-                                    height: 24
-                                }}
-                                resizeMode="contain"
-                            />
-
-                        </View>
-                    </TouchableOpacity>
-                    {
-                        !existFilter &&
-
-                        <>
-                            <View style={{ paddingHorizontal: 24 }}>
-                                <Text
-                                    style={{ fontSize: 20, fontWeight: "700", color: colors.text }}
-                                >
-                                    {i18n.t('thebestChoice')}
-                                </Text>
-
-                                <Image
-                                    source={BestChoice}
-                                    style={{
-                                        width: '100%', aspectRatio: 1.5, borderRadius: 24, marginTop: 8
-
-                                        , height: undefined
-                                    }}
-                                    resizeMode="contain"
-                                />
-
-                            </View>
-                            <FlaTCategories showedCategories={allCategories} selectedCategory={selectedCategory}
-                                setSelectedCategory={setSelectedCategory} />
-                        </>
-                    }
-
-                    <Items viewProducts={allProductsShuffled} navigation={navigation} user={userProfile}
-                        filter={filter}
-                        existFilter={existFilter}
+                        {i18n.t('thebestChoice')}
+                    </Text>
+                    <Image
+                        source={BestChoice}
+                        style={{
+                            width: '100%', aspectRatio: 1.5, borderRadius: 24, marginTop: 8
+                            , height: undefined
+                        }}
+                        resizeMode="contain"
                     />
-                </SafeAreaView>
-                <BottomSheet
-                    Ref={bottomSheetModalRef}
-                >
-                    <FilterView
-                        closeFilterModal={closeFilterModal}
-                        CATEGORIES={allCategories}
-                        setExistFilter={setExistFilter}
-                        setFilter={setFilter}
-                    />
-                </BottomSheet>
 
+                </View>
+                <FlaTCategories
+                    filter={filter}
+                    setFilter={setFilter}
+
+                />
+                <Items navigation={navigation} products={(productQuery.data || []).filter((item: ProductType) => {
+                    const categoryFlag = filter.categories.length === 0 || filter.categories.includes(item.category);
+                    const languageFlag = filter.languages.length === 0 || filter.languages.includes(item.language);
+                    return categoryFlag && languageFlag;
+                })}
+                />
             </ScrollView>
-          
+
+
 
         </View>
     );
@@ -287,27 +117,6 @@ const HomeScreen = ({ navigation, extraData }: any) => {
 
 
 
-const BottomSheet = ({ Ref, children }: any) => {
-    return (
-        <BottomSheetModal
-            snapPoints={["50%", "85%"]} // Example snap points
-            index={0}
-            ref={Ref}
-            backdropComponent={(props) => <CustomBackdrop {...props} />}
-            backgroundStyle={{
-                borderRadius: 24,
-                backgroundColor: 'white',
-            }}
-            handleIndicatorStyle={{ backgroundColor: 'black' }}
-            keyboardBehavior="interactive" // or "extend" based on the library
-            enablePanDownToClose={false}
 
-        >
-            <BottomSheetScrollView>
-                {children}
-            </BottomSheetScrollView>
-        </BottomSheetModal>
-    );
-}
 
 export default HomeScreen;

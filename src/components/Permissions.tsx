@@ -6,6 +6,12 @@ import { request, PERMISSIONS, RESULTS } from 'react-native-permissions';
 
 const requestCameraPermission = async () => {
     try {
+        const alreadyGranted = await PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.CAMERA);
+        if (alreadyGranted) {
+            console.log('Camera permission already granted');
+            return true;
+        }
+
         const granted = await PermissionsAndroid.request(
             PermissionsAndroid.PERMISSIONS.CAMERA,
             {
@@ -19,17 +25,18 @@ const requestCameraPermission = async () => {
             },
         );
         if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-            console.log('You can use the camera');
+            console.log('Camera permission granted');
             return true;
         } else {
             console.log('Camera permission denied');
             return false;
         }
     } catch (err) {
-        console.warn(err);
+        console.error('Error requesting camera permission:', err);
         return false;
     }
 };
+
 
 
 export { requestCameraPermission };

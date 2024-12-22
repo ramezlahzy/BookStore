@@ -1,76 +1,49 @@
 import React, { useState } from 'react';
-import { Image, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Image, Text, TouchableOpacity, View } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import { auth, db } from '../../firebase/config';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { doc, setDoc } from 'firebase/firestore';
 import LoadingModal from '../../utils/LoadingModal';
-import RegisterImage from '../../../assets/register.png';
 import i18n from '../../i18n';
+import { UserType } from '../../types/types/user.types';
+import { useMutation } from '@tanstack/react-query';
+import { register } from '../../api/auth';
+import { RegisterRequestType } from '../../types/types/auth.types';
+import { TextInputForm } from '../../components/Texts';
+import { onSubmit } from '../../BackEnd/helpers';
+import { RegisterValidator } from '../../types/validators/auth.validator';
+import { RegisterScreenImage } from '../../../assets';
 
-export default function RegistrationScreen({ navigation }) {
-    const [fullName, setFullName] = useState('');
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [confirmPassword, setConfirmPassword] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState('');
+export default function RegistrationScreen({ navigation }: any) {
+    const [formData, setFormData] = useState<RegisterRequestType>({
+        fullName: '',
+        email: '',
+        password: '',
+        confirmPassword: '',
+    });
+    const [errors, setErrors] = useState<Record<string, string | undefined>>({});
+
+    const mutation = useMutation({
+        mutationFn: register,
+        onSuccess: (user: UserType) => {
+            navigation.navigate('Home', { user });
+        },
+    }
+    );
 
     const onFooterLinkPress = () => {
         navigation.navigate('Login');
     };
 
-    const onRegisterPress = async () => {
-        setError(''); // Clear previous error
-        if (!fullName.trim() || !email.trim() || !password.trim() || !confirmPassword.trim()) {
-            setError(i18n.t('pleaseFillAllFields'));
-            return;
-        }
-
-        if (password !== confirmPassword) {
-            setError(i18n.t('passwordsDoNotMatch'));
-            return;
-        }
-
-        setIsLoading(true);
-        try {
-            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-            const uid = userCredential.user.uid;
-            const data = {
-                id: uid,
-                email,
-                fullName,
-            };
-
-            await setDoc(doc(db, 'users', uid), data);
-            navigation.navigate('Home', { user: data });
-        } catch (error: any) {
-            if (error.code === 'auth/email-already-in-use') {
-                setError(i18n.t('emailAlreadyInUse'));
-            } else if (error.code === 'auth/invalid-email') {
-                setError(i18n.t('invalidEmail'));
-            } else if (error.code === 'auth/weak-password') {
-                setError(i18n.t('weakPassword'));
-            } else if (error.code === 'auth/network-request-failed') {
-                setError(i18n.t('networkRequestFailed'));
-            } else {
-                setError(i18n.t('failedToRegister'));
-            }
-        } finally {
-            setIsLoading(false);
-        }
-    };
 
     return (
         <View style={{ flex: 1, backgroundColor: 'white', justifyContent: 'center', alignItems: 'center' }}>
             <KeyboardAwareScrollView style={{ flex: 1, width: '100%' }} keyboardShouldPersistTaps="always">
                 <View style={{ flex: 1, justifyContent: 'flex-start', alignItems: 'flex-start', marginBottom: 20 }}>
                     <Image
-                        source={RegisterImage}
+                        source={RegisterScreenImage}
                         style={{
                             width: '100%',
                             height: undefined,
-                            aspectRatio: 1.55, // aspect ratio is 1.5:1
+                            aspectRatio: 1.7, // aspect ratio is 1.5:1
                             resizeMode: 'cover', // Adjust based on how you want the image to behave
                         }}
                     />
@@ -78,60 +51,52 @@ export default function RegistrationScreen({ navigation }) {
 
                 <View style={{ width: '70%', alignSelf: 'center' }}>
 
-
-                    <TextInput
-                        style={{
-                            marginTop: 20, height: 50, borderColor: '#6C6A6A', borderWidth: 1, borderRadius: 10, paddingHorizontal: 10,
-                            color: 'black', textAlign: 'right',
-                        }}
+                    <TextInputForm
+                        itemValue={formData.fullName}
+                        setItemValue={(text: any) => setFormData({ ...formData, fullName: text })}
+                        error={errors.fullName}
                         placeholder={i18n.t('fullName')}
-                        placeholderTextColor="#aaaaaa"
-                        onChangeText={(text) => setFullName(text)}
-                        value={fullName}
-                        autoCapitalize="none"
+                        value={formData.fullName}
                     />
-                    <TextInput
-                        style={{
-                            marginTop: 20, height: 50, borderColor: '#6C6A6A', borderWidth: 1, borderRadius: 10, paddingHorizontal: 10,
-                            color: 'black', textAlign: 'right',
-                        }}
+                    
+                    <TextInputForm
+                        itemValue={formData.email}
+                        setItemValue={(text: any) => setFormData({ ...formData, email: text })}
+                        error={errors.email}
                         placeholder={i18n.t('email')}
-                        placeholderTextColor="#aaaaaa"
-                        onChangeText={(text) => setEmail(text)}
-                        value={email}
-                        autoCapitalize="none"
+                        value={formData.email}
                     />
-                    <TextInput
-                        style={{
-                            marginTop: 20, height: 50, borderColor: '#6C6A6A', borderWidth: 1, borderRadius: 10, paddingHorizontal: 10,
-                            color: 'black', textAlign: 'right',
-                        }}
+                   
+                    <TextInputForm
+                        itemValue={formData.password}
+                        setItemValue={(text: any) => setFormData({ ...formData, password: text })}
+                        error={errors.password}
                         placeholder={i18n.t('password')}
-                        placeholderTextColor="#aaaaaa"
-                        secureTextEntry
-                        onChangeText={(text) => setPassword(text)}
-                        value={password}
-                        autoCapitalize="none"
+                        value={formData.password}
+                        secureTextEntry={true}
                     />
-                    <TextInput
-                        style={{
-                            marginTop: 20, height: 50, borderColor: '#6C6A6A', borderWidth: 1, borderRadius: 10, paddingHorizontal: 10,
-                            color: 'black', textAlign: 'right',
-                        }}
+                
+                    <TextInputForm
+                        itemValue={formData.confirmPassword}
+                        setItemValue={(text: any) => setFormData({ ...formData, confirmPassword: text })}
+                        error={errors.confirmPassword}
                         placeholder={i18n.t('confirmPassword')}
-                        placeholderTextColor="#aaaaaa"
-                        secureTextEntry
-                        onChangeText={(text) => setConfirmPassword(text)}
-                        value={confirmPassword}
-                        autoCapitalize="none"
+                        value={formData.confirmPassword}
+                        secureTextEntry={true}
                     />
 
-                    {error ?
-                     (
-                        <Text style={{ color: 'red', textAlign: 'center', margin: 10 }}>{error}</Text>
-                     )
-                     : null}
-                    <TouchableOpacity onPress={onRegisterPress} style={{ backgroundColor: '#FFC600', marginTop: 40, padding: 15, borderRadius: 10 }}>
+                    {mutation.error?.message ?
+                        (
+                            <Text style={{ color: 'red', textAlign: 'center', margin: 10 }}>{
+                                mutation.error?.message
+                            }</Text>
+                        )
+                        : null}
+                    <TouchableOpacity onPress={
+                        async (e: any) => {
+                            onSubmit(mutation, formData, setErrors, RegisterValidator, e);
+                        }
+                    } style={{ backgroundColor: '#FFC600', marginTop: 40, padding: 15, borderRadius: 10 }}>
                         <Text style={{ textAlign: 'center', fontWeight: 'bold' }}>
                             {i18n.t('createAccount')}
                         </Text>
@@ -149,7 +114,7 @@ export default function RegistrationScreen({ navigation }) {
                     </View>
                 </View>
             </KeyboardAwareScrollView>
-            <LoadingModal isVisible={isLoading} />
+            <LoadingModal isVisible={mutation.isPending} />
         </View>
     );
 }

@@ -1,277 +1,186 @@
-import { Image, ScrollView, Text, TextInput, TouchableOpacity, View, StyleSheet, Switch } from "react-native";
-import React, { useState } from "react";
+import { Image, Text, TextInput, TouchableOpacity, View, StyleSheet, Switch, Alert } from "react-native";
+import React, { useEffect, useState } from "react";
 import { useTheme } from "@react-navigation/native";
-import { updateDoc } from "../../firebase/config";
-import { addDoc, collection, firestore, doc } from "../../firebase/config";
-import { launchImageLibrary } from 'react-native-image-picker';
-import { requestCameraPermission } from "../../components/Permissions";
 import Chip from "../../components/Chip";
 import i18n from "../../i18n";
 import { Languages, Categories } from "../../BackEnd/Gets";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
-
-const SIZES = ["XS", "S", "M", "L", "XL", "XXL", "3XL"];
-const COLORS = ["#ff0000", "#00ff00", "#0000ff", "#000000", "#ffffff", "#ff00ff", "#00ffff"];
+import LoadingModal from "../../utils/LoadingModal";
+import { ProductType } from "../../types/types/product.types";
+import { onSubmit } from "../../BackEnd/helpers";
+import { ProductValidator } from "../../types/validators/product.validator";
+import { useMutation } from "@tanstack/react-query";
+import { uploadImage, uploadProduct } from "../../api/products";
+import { ErrorText } from "../../components/Texts";
+import { UploadImage } from "../../../assets";
+import { PrimaryButton } from "../../components/buttons";
+import { styles } from "./style";
+import { requestCameraPermission } from "../../components/Permissions";
 
 const AddProductScreen = ({ navigation }:
     any
 ) => {
     const { colors } = useTheme();
-    const [imageUri, setImageUri] = useState<string | null>(null);
-    const [imageUrl, setImageUrl] = useState(null);
-    const [productName, setProductName] = useState('');
-    const [availableSizes, setAvailableSizes] = useState([]);
-    const [availableColors, setAvailableColors] = useState([]);
-    const [description, setDescription] = useState('');
-    const [imageError, setImageError] = useState(false);
-    const [nameError, setNameError] = useState(false);
-    const [error, setError] = useState("");
-    const [formData, setFormData] = useState({
+    const [errors, setErrors] = useState<Record<string, string | undefined>>({});
+    const [formData, setFormData] = useState<ProductType>({
+        id: "",
         bookName: "",
         description: "",
         imageUrl: "",
         language: "",
         category: "",
+        userId: "",
     })
-    const validate = () => {
-        let valid = true;
-        if (!imageUri) {
-            setImageError(true)
-            valid = false;
-        } else
-            setImageError(false)
-        if (productName === '') {
-            setNameError(true)
-            valid = false;
-        } else
-            setNameError(false)
-
-        const currentDate = new Date();
-
-        if (valid) {
-            // upLoadProduct(product, setLoading).then(r => {
-            //     console.log("uploaded")
-            //     closeFilterModal()
-            //     // refreshProducts()
-            // })
+    const mutationUploadProduct = useMutation({
+        mutationFn: uploadProduct,
+        onSuccess: () => {
+            // navigation.navigate(-1)
+            navigation.goBack();
+        },
+        onError: (error) => {
+            console.log('Error:', error);
+            Alert.alert(i18n.t('error'), i18n.t('maxBookPerMonth'), [
+                { text: i18n.t('understood'), style: 'default' }
+            ]);
         }
-        return valid;
-    }
+    });
+    const mutationUploadPicture = useMutation({
+        mutationFn: uploadImage,
+        onSuccess: (imageUrl: string) => {
+            setFormData({ ...formData, imageUrl });
+        },
+    })
 
-    const pickImage = async () => {
-        const hasPermission = await requestCameraPermission();
-        if (!hasPermission) return;
 
-        const result = await launchImageLibrary({
-            mediaType: 'photo',
-            quality: 1,
-        });
-
-        if (result.assets && result.assets.length > 0) {
-            console.log('Selected Image:', result.assets[0].uri);
-        } else {
-            console.log('No image selected.');
-        }
-    };
-
+    useEffect(() => {
+        const checkPermissions = async () => {
+            const hasPermission = await requestCameraPermission();
+            if (!hasPermission) {
+                console.log('Permission denied');
+                return;
+            }
+        };
+    
+        checkPermissions();
+    }, []);
 
     return (
-        <KeyboardAwareScrollView style={{ flex: 1, width: '100%' }} keyboardShouldPersistTaps="always">
-
-            <View style={{ padding: 6, gap: 16, flex: 1, flexGrow: 1, paddingBottom: 14,backgroundColor:'white' ,paddingTop:60}}>
-
-
-                
-                <TouchableOpacity
-                    onPress={pickImage}
-                    style={{
-                        width: "80%",
-                        aspectRatio: 1,
-                        borderRadius: 16,
-                        backgroundColor: colors.card,
-                        alignItems: "center",
-                        justifyContent: "center",
-                        borderColor: 'grey',
-                        borderWidth: .4,
-
-                        alignContent: "center",
-                        alignSelf: "center",
-                    }}
-                >
-                    {
-                        !imageUrl &&
-                        <Text style={{
-                            color: colors.text, opacity: 1,
-
-                            justifyContent: "center", textAlign: 'center',
-                        }}>
-                            {i18n.t("addImage")}
-                        </Text>
-                    }
-
-                    {
-                        imageUrl && <Image
-                            source={{ uri: imageUrl }}
+        <>
+            <KeyboardAwareScrollView style={{ flex: 1, width: '100%' }} keyboardShouldPersistTaps="always">
+                <View style={{ padding: 6, gap: 16, flex: 1, flexGrow: 1, paddingBottom: 14, backgroundColor: 'white', paddingTop: 60 }}>
+                    <TouchableOpacity
+                        onPress={async () => { mutationUploadPicture.mutate() }}
+                        style={[styles.pickImageButton, { backgroundColor: colors.background }]}
+                    >
+                        <Image
+                            source={formData.imageUrl ? { uri: formData.imageUrl } : UploadImage}
                             style={{
                                 width: "100%",
-                                aspectRatio: 1,
+                                height: '100%',
                                 borderRadius: 16,
                             }}
+                        // contain
+
                         />
-                    }
-                </TouchableOpacity>
-                <Text>
-                    {error}
-                </Text>
-                {
-                    imageError && <Text style={{ color: 'red', textAlign: 'center' }}>
-                        {i18n.t("chooseImage")}
-                    </Text>
-                }
+                    </TouchableOpacity>
+                    <View style={{ paddingHorizontal: 14 }}>
+                        {mutationUploadPicture.error?.message ? <Text style={{
+                            color: 'red'
 
-                <View style={{ paddingHorizontal: 14 }}>
-                    <Text style={{ fontSize: 16, fontWeight: "600", marginBottom: 12 }}>
-                        {i18n.t("bookName")}
-                    </Text>
-                    <TextInput
-                        placeholder={i18n.t("bookName")}
-                        style={[styles.input]}
-                        onChangeText={(text) =>
-                            setFormData({ ...formData, bookName: text })
-                        }
-                    />
-                    {
-                        nameError && <Text style={{ color: 'red' }}>
-                            {i18n.t("enterBookName")}
+                            , textAlign: 'center', marginTop: 10, marginBottom: 10
+                        }}>{mutationUploadPicture.error?.message}</Text> : null}
+
+                        <ErrorText error={errors.imageUrl && i18n.t("chooseImage")} />
+                        <Text style={{ fontSize: 16, fontWeight: "600", marginBottom: 12 }}>
+                            {i18n.t("bookName")}
                         </Text>
+                        <TextInput
+                            placeholder={i18n.t("bookName")}
+                            style={[styles.input]}
+                            onChangeText={(text) =>
+                                setFormData({ ...formData, bookName: text })
+                            }
+                        />
+                        <ErrorText error={errors.bookName && i18n.t("enterBookName")} />
+                    </View>
+
+                    <View style={{ paddingHorizontal: 14 }}>
+                        <Text style={{ fontSize: 16, fontWeight: "600", marginBottom: 12 }}>
+                            {i18n.t("language")}
+                        </Text>
+                        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
+                            {Languages.map((item, i) => {
+                                return (
+                                    <Chip
+                                        label={i18n.t(item)}
+                                        isSelected={formData.language === item}
+                                        onClick={() => {
+                                            setFormData({ ...formData, language: item })
+                                        }}
+                                    />
+                                );
+                            })}
+                        </View>
+                        <ErrorText error={errors.language && i18n.t("chooseLanguage")} />
+
+                    </View>
+
+                    <View style={{ paddingHorizontal: 14 }}>
+                        <Text style={{ fontSize: 16, fontWeight: "600", marginBottom: 12 }}>
+                            {i18n.t("categories")}
+                        </Text>
+                        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
+                            {Categories.map((item, i) => {
+                                return (
+                                    <Chip
+                                        label={i18n.t(item)}
+                                        isSelected={formData.category === item}
+                                        onClick={() => {
+                                            setFormData({ ...formData, category: item })
+                                        }}
+                                    />
+                                );
+                            })}
+                        </View>
+                        <ErrorText error={errors.category && i18n.t("chooseCategory")} />
+
+                    </View>
+                    <View style={{ paddingHorizontal: 14 }}>
+                        <Text style={{ fontSize: 16, fontWeight: "600", marginBottom: 12 }}>
+                            {i18n.t("description")}
+                        </Text>
+
+                        <TextInput
+                            placeholder={i18n.t("description")}
+                            style={[styles.input, { height: 80, width: '80%' }]}
+                            multiline={true}
+                            numberOfLines={3}
+                            maxLength={150}
+                            onChangeText={
+                                (text) => {
+                                    setFormData({ ...formData, description: text })
+                                }
+                            }
+                        />
+                        <ErrorText error={errors.description && i18n.t("enterDescription")} />
+                    </View>
+                    <PrimaryButton label={i18n.t("save")} onPress={(e: any) => {
+                        
+                        
+                        onSubmit(mutationUploadProduct, formData, setErrors, ProductValidator, e); }} />
+
+                    {
+                        mutationUploadProduct.error?.message ? <Text style={{
+                            color: 'red', textAlign: 'center', marginTop: 10, marginBottom: 10
+                        }}>{mutationUploadProduct.error?.message}</Text> : null
                     }
                 </View>
-
-                <View style={{ paddingHorizontal: 14 }}>
-                    <Text style={{ fontSize: 16, fontWeight: "600", marginBottom: 12 }}>
-                        {i18n.t("language")}
-                    </Text>
-                    <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
-
-                        {Languages.map((item, i) => {
-                            return (
-                                <Chip
-                                    allItems={"selectedSizes"}
-                                    setAllItems={() => {
-                                        console.log(item)
-                                        setFormData({ ...formData, language: item })
-                                    }}
-                                    setIsAllSelected={() => { }}
-                                    item={item}
-                                    label={i18n.t(item)}
-                                    isSelected={
-                                        formData.language === item
-                                    }
-                                    isAllSelected={false}
-                                    chooseMany={false}
-                                />
-                            );
-                        })}
-                    </View>
-                </View>
-
-                <View style={{ paddingHorizontal: 14 }}>
-                    <Text style={{ fontSize: 16, fontWeight: "600", marginBottom: 12 }}>
-                        {i18n.t("categories")}
-                    </Text>
-                    <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
-
-                        {Categories.map((item, i) => {
-                            return (
-                                <Chip
-                                    allItems={"none"}
-                                    setAllItems={() => {
-                                        setFormData({ ...formData, category: item })
-                                        console.log(formData)
-                                    }
-                                    }
-                                    setIsAllSelected={() => ""}
-                                    item={item}
-                                    label={
-                                        i18n.t(item)
-                                    }
-                                    isSelected={
-                                        formData.category === item
-                                    }
-                                    isAllSelected={false}
-                                    chooseMany={true}
-                                />
-                            );
-                        })}
-                    </View>
-                </View>
-                <View style={{ paddingHorizontal: 14 }}>
-                    <Text style={{ fontSize: 16, fontWeight: "600", marginBottom: 12 }}>
-                        {i18n.t("description")}
-                    </Text>
-
-                    <TextInput
-                        placeholder={i18n.t("description")}
-                        style={[styles.input, { height: 80, width: '80%' }]}
-                        multiline={true}
-                        numberOfLines={3}
-                        maxLength={150}
-                        onChangeText={
-                            (text) => {
-                                setFormData({ ...formData, description: text })
-                            }
-                        }
-                    />
-                </View>
-
-
-
-
-                <TouchableOpacity
-                    style={{
-                        backgroundColor: colors.primary,
-                        height: 44,
-                        width: 94,
-                        borderRadius: 64,
-                        alignItems: "center",
-                        justifyContent: "center",
-                        position: "relative",
-                        flexDirection: "row",
-                        padding: 12,
-                        alignSelf: "center",
-                    }}
-                    onPress={validate}
-                >
-                    <Text style={{ color: colors.text, fontFamily: 'bold' }}>
-                        {i18n.t("save")}
-                    </Text>
-                </TouchableOpacity>
-            </View>
-        </KeyboardAwareScrollView>
+            </KeyboardAwareScrollView>
+            <LoadingModal isVisible={
+                mutationUploadProduct.isPending || mutationUploadPicture.isPending
+            } />
+        </>
     )
 }
-const styles = StyleSheet.create({
-    input: {
-        width: "50%",
-        fontSize: 15,
-        height: 44,
-        borderRadius: 8,
-        borderWidth: 1,
-        borderColor: '#ccc',
-        textAlign: 'right', color: 'black',
-    }
-});
 
-
-// const upLoadProduct = async (product, setLoading) => {
-//     setLoading(true)
-//     try {
-//         const docRef = await addDoc(collection(firestore, "Products"), product);
-//         await updateDoc(doc(firestore, "Products", docRef.id), { id: docRef.id });
-//     } catch (error) {
-
-//         console.error("Error adding product:", error);
-//     }
-//     setLoading(false)
-// }
 export default AddProductScreen;

@@ -12,7 +12,7 @@ export default function StartScreen({ navigation }: any) {
                 {i18n.t('welcome')}
             </Text>
             <Text style={{ fontSize: 20, textAlign: 'center', margin: 20 }}>
-                {i18n.t('oneStop')}
+                {i18n.t('slogan')}
             </Text>
             <View style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '20%', width: '100%', backgroundColor: 'white' }}>
                 <TouchableOpacity

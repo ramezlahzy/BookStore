@@ -3,45 +3,33 @@ import React, { useState } from "react";
 import { useTheme } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { BottomSheetScrollView } from "@gorhom/bottom-sheet";
-import { COLORS, Languages } from "../BackEnd/Gets";
+import { Categories, COLORS, Languages } from "../BackEnd/Gets";
 import i18n from "../i18n";
 import Chip from "./Chip";
 import { Forward } from "../../assets";
+import { set } from "@react-native-firebase/database";
 
 const MAX_PRICE = 5000;
 
-const FilterView = ({ setExistFilter, CATEGORIES, closeFilterModal, setFilter }:
-    { setExistFilter: any, CATEGORIES: any, closeFilterModal: any, setFilter: any }
+const FilterView = ({ closeFilterModal, setFilter }:
+    {
+        closeFilterModal: any, setFilter: any
+    }
 ) => {
-    interface FilterViewProps {
-        setExistFilter: (exist: boolean) => void;
-        CATEGORIES: string[];
-        closeFilterModal: () => void;
-        setFilter: (filter: Filter) => void;
-    }
 
-    interface Filter {
-        startPrice: number;
-        endPrice: number;
-        selectedColors: string[];
-        selectedSizes: string[];
-        selectedCategories: string[];
-        isAllColorsSelected: boolean;
-        isAllSizesSelected: boolean;
-        isAllCategoriesSelected: boolean;
-    }
-    const [startPrice, setStartPrice] = useState(100);
-    const [endPrice, setEndPrice] = useState(3000);
     const theme = useTheme();
-    console.log(CATEGORIES)
-    console.log(theme)
     const insets = useSafeAreaInsets();
-    const [selectedColors, setSelectedColors] = useState([]);
-    const [selectedSizes, setSelectedSizes] = useState([]);
-    const [selectedCategories, setSelectedCategories] = useState([]);
-    const [isAllColorsSelected, setIsAllColorsSelected] = useState(true);
-    const [isAllSizesSelected, setIsAllSizesSelected] = useState(true);
-    const [isAllCategoriesSelected, setIsAllCategoriesSelected] = useState(true);
+
+    const [copiedFilter, setCopiedFilter] = useState<{
+        categories: string[],
+        languages: string[],
+    }>(
+        {
+            categories: [],
+            languages: [],
+        }
+    );
+
     return (
         <View style={{ flex: 1 }}>
             <BottomSheetScrollView style={{ flex: 1 }}>
@@ -65,14 +53,10 @@ const FilterView = ({ setExistFilter, CATEGORIES, closeFilterModal, setFilter }:
                         </Text>
                         <TouchableOpacity
                             onPress={() => {
-                                setStartPrice(100);
-                                setEndPrice(3000);
-                                setSelectedColors([]);
-                                setSelectedSizes([]);
-                                setSelectedCategories([]);
-                                setIsAllColorsSelected(true);
-                                setIsAllSizesSelected(true);
-                                setIsAllCategoriesSelected(true);
+                                setCopiedFilter({
+                                    categories: [],
+                                    languages: [],
+                                })
                             }}
                             style={{
                                 marginLeft: "auto",
@@ -99,27 +83,32 @@ const FilterView = ({ setExistFilter, CATEGORIES, closeFilterModal, setFilter }:
                         <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
                             <Chip
                                 label={i18n.t("all")}
-                                isSelected={isAllSizesSelected}
-                                setAllItems={setSelectedSizes}
-                                allItems={selectedSizes}
-                                item={"All"}
-                                isAllSelected={isAllSizesSelected}
-                                setIsAllSelected={setIsAllSizesSelected}
-                                chooseMany={true}
+                                isSelected={copiedFilter.languages.length === 0}
+                                onClick={() => {
+                                    setCopiedFilter({
+                                        categories: [],
+                                        languages: [],
+                                    })
+                                }}
                             />
-                            {Languages.map((item, i) => {
+                            {Languages.map((item) => {
                                 return (
                                     <Chip
-                                        allItems={selectedSizes}
-                                        setAllItems={setSelectedSizes}
-                                        setIsAllSelected={setIsAllSizesSelected}
-                                        item={item}
                                         label={i18n.t(item)}
-                                        chooseMany={true}
-                                        isSelected={
-                                            selectedSizes.includes(item)
-                                        }
-                                        isAllSelected={isAllSizesSelected}
+                                        isSelected={copiedFilter.languages.includes(item)}
+                                        onClick={() => {
+                                            if (copiedFilter.languages.includes(item)) {
+                                                setCopiedFilter({
+                                                    categories: copiedFilter.categories,
+                                                    languages: copiedFilter.languages.filter((i) => i !== item),
+                                                })
+                                            } else {
+                                                setCopiedFilter({
+                                                    categories: copiedFilter.categories,
+                                                    languages: copiedFilter.languages.concat(item),
+                                                })
+                                            }
+                                        }}
                                     />
                                 );
                             })}
@@ -133,29 +122,32 @@ const FilterView = ({ setExistFilter, CATEGORIES, closeFilterModal, setFilter }:
                         <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
                             <Chip
                                 label={i18n.t("all")}
-                                isSelected={isAllCategoriesSelected}
-                                setAllItems={setSelectedCategories}
-                                allItems={selectedCategories}
-                                item={"All"}
-                                isAllSelected={isAllCategoriesSelected}
-                                setIsAllSelected={setIsAllCategoriesSelected}
-                                chooseMany={true}
+                                isSelected={copiedFilter.categories.length === 0}
+                                onClick={() => {
+                                    setCopiedFilter({
+                                        categories: [],
+                                        languages: [],
+                                    })
+                                }}
                             />
-                            {CATEGORIES.map((item, i) => {
+                            {Categories.map((item: string, i: number) => {
                                 return (
                                     <Chip
-                                        allItems={selectedCategories}
-                                        setAllItems={setSelectedCategories}
-                                        setIsAllSelected={setIsAllCategoriesSelected}
-                                        item={item}
-                                        label={
-                                            i18n.t(item)
-                                        }
-                                        isSelected={
-                                            selectedCategories.includes(item)
-                                        }
-                                        chooseMany={true}
-                                        isAllSelected={isAllCategoriesSelected}
+                                        label={i18n.t(item)}
+                                        isSelected={copiedFilter.categories.includes(item)}
+                                        onClick={() => {
+                                            if (copiedFilter.categories.includes(item)) {
+                                                setCopiedFilter({
+                                                    categories: copiedFilter.categories.filter((i) => i !== item),
+                                                    languages: copiedFilter.languages,
+                                                })
+                                            } else {
+                                                setCopiedFilter({
+                                                    categories: copiedFilter.categories.concat(item),
+                                                    languages: copiedFilter.languages,
+                                                })
+                                            }
+                                        }}
                                     />
                                 );
                             })}
@@ -180,18 +172,8 @@ const FilterView = ({ setExistFilter, CATEGORIES, closeFilterModal, setFilter }:
                         position: "relative",
                     }}
                     onPress={() => {
-                        setExistFilter(true)
-                        setFilter({
-                            startPrice: startPrice,
-                            endPrice: endPrice,
-                            selectedColors: selectedColors,
-                            selectedSizes: selectedSizes,
-                            selectedCategories: selectedCategories,
-                            isAllColorsSelected: isAllColorsSelected,
-                            isAllSizesSelected: isAllSizesSelected,
-                            isAllCategoriesSelected: isAllCategoriesSelected,
-                        })
                         closeFilterModal()
+                        setFilter(copiedFilter)
                     }}
                 >
                     <Text

@@ -4,16 +4,12 @@ import { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ParamListBase, useTheme } from "@react-navigation/native";
 import { Image } from "react-native";
-import Home from '../../../assets/home.png'
 import i18n from "../../i18n";
-;
-import Chat from '../../../assets/messenger.png'
-import Profile from '../../../assets/profile.png'
+import { Chat, Home, Profile } from "../../../assets";
 // import { useSharedValue } from 'react-native-reanimated';
 
 const CustomBottomTabs = (props: any) => {
     const { colors } = useTheme();
-    console.log('props', props);
     const map =
     {
         "insets": { "bottom": 48, "left": 0, "right": 0, "top": 31.619047164916992 },
@@ -85,9 +81,9 @@ const TabItem = ({
         >
             <Image
                 source={
-                    routeName === "home"
+                    routeName === "Home"
                         ? Home
-                        : routeName === "chat"
+                        : routeName === "Chats"
                             ? Chat
                             : Profile
                 }

@@ -146,7 +146,8 @@ export const Header = ({
             display: 'flex',
             flexDirection: 'row-reverse',
             alignItems: 'center',
-            padding: 10
+            padding: 10,
+            paddingTop:30
         }}
     >
         <Chip

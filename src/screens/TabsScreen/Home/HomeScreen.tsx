@@ -53,7 +53,7 @@ const HomeScreen = ({ navigation, extraData }: any) => {
 
 
     return (
-        <View style={{ flex: 1 }}>
+        <View style={{ flex: 1 ,margin:10}}>
             {
                 !isAnonymous &&
                 <AddButton openAddModel={() => {
@@ -96,11 +96,11 @@ const HomeScreen = ({ navigation, extraData }: any) => {
                     />
 
                 </View>
-                <FlaTCategories
+                {/* <FlaTCategories
                     filter={filter}
                     setFilter={setFilter}
 
-                />
+                /> */}
                 <Items navigation={navigation} products={(productQuery.data || []).filter((item: ProductType) => {
                     const categoryFlag = filter.categories.length === 0 || filter.categories.includes(item.category);
                     const languageFlag = filter.languages.length === 0 || filter.languages.includes(item.language);

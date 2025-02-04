@@ -1,59 +1,26 @@
 {
   "project_info": {
-    "project_number": "267775855380",
-    "project_id": "book-store-19f57",
-    "storage_bucket": "book-store-19f57.firebasestorage.app"
+    "project_number": "217887605432",
+    "project_id": "book-store-c2ded",
+    "storage_bucket": "book-store-c2ded.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:267775855380:android:80a139902d4026adca5001",
+        "mobilesdk_app_id": "1:217887605432:android:5896043c553f098498aa4d",
         "android_client_info": {
-          "package_name": "com.example.bookStore"
+          "package_name": "com.ramezlahzy.bookStore"
         }
       },
-      "oauth_client": [
-        {
-          "client_id": "267775855380-7emmrcvmnq53uvc6momrush56hgjgftt.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.example.bookStore",
-            "certificate_hash": "0207310a3e48aedf8059f2b192174b9f3986aff1"
-          }
-        },
-        {
-          "client_id": "267775855380-t9mj4rvrk7ep7et5a98vgd0lfr30jfq8.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.example.bookStore",
-            "certificate_hash": "be19d17110034813aacd81bb2cc09b949bfded59"
-          }
-        },
-        {
-          "client_id": "267775855380-ndf8oh65iupofucjfpg90clgg0tkme22.apps.googleusercontent.com",
-          "client_type": 3
-        }
-      ],
+      "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyAUc5ZX3EntdaQEIHR_WPuJUqNGyNcU7rI"
+          "current_key": "AIzaSyDOMou5iic3EDmg0p87xp5cWIJfZ0i5b9g"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": [
-            {
-              "client_id": "267775855380-ndf8oh65iupofucjfpg90clgg0tkme22.apps.googleusercontent.com",
-              "client_type": 3
-            },
-            {
-              "client_id": "267775855380-tacivauqea95t1qjjn39eo1d4pstkm2j.apps.googleusercontent.com",
-              "client_type": 2,
-              "ios_info": {
-                "bundle_id": "com.example.bookStore"
-              }
-            }
-          ]
+          "other_platform_oauth_client": []
         }
       }
     }

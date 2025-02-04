@@ -2,18 +2,19 @@ import { auth, db, collection } from '../firebase/config';
 import { doc, setDoc, getDocs, getDoc, deleteDoc, query, where } from 'firebase/firestore';
 import i18n from "../i18n";
 import { ProductType } from '../types/types/product.types';
-import { requestCameraPermission } from '../components/Permissions';
+import { requestCameraPermission, requestPhotoLibraryPermission } from '../components/Permissions';
 import { launchImageLibrary } from 'react-native-image-picker';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage } from '../firebase/config';
 import database from '@react-native-firebase/database'; // For Realtime Database
 import { UserType } from '../types/types/user.types';
 import { getCurrentUser } from './auth';
+import { Alert } from 'react-native';
 
 export async function uploadImage(): Promise<string> {
     try {
-        const hasPermission = await requestCameraPermission();
-        if (!hasPermission) return '';
+        const hasPermission = await requestPhotoLibraryPermission();
+
 
         const result = await launchImageLibrary({
             mediaType: 'photo',
@@ -42,40 +43,34 @@ export async function uploadImage(): Promise<string> {
 }
 
 
-
+const generateUid = () => {
+    return (
+      'uid-' +
+      Math.random().toString(36).substr(2, 9) + 
+      '-' +
+      Date.now().toString(36)
+    );
+  };
 export async function uploadProduct(request: ProductType): Promise<ProductType> {
     try {
         const user = auth.currentUser;
         if (!user)
             throw new Error(i18n.t('userNotFound'));
-
-        // Check user's monthly book count
-        const currentDate = new Date();
-        const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-        const lastDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
-
-        const productsRef = collection(db, 'products');
-        const q = query(
-            productsRef,
-            where('userId', '==', user.uid),
-            where('createdAt', '>=', firstDayOfMonth),
-            where('createdAt', '<=', lastDayOfMonth)
+        const newUid = generateUid();
+        if (!newUid) {
+            throw new Error('Failed to generate product ID');
+        }
+        const productRef = doc(db, 'products', newUid);
+        await setDoc(productRef,
+            {
+                ...request,
+                id: newUid,
+                userId: user.uid,
+                createdAt: new Date(),
+            }
         );
 
-        const querySnapshot = await getDocs(q);
-        console.log('querySnapshot.size', querySnapshot.size);
-        if (querySnapshot.size >= 3) {
-            throw new Error(i18n.t('monthlyBookLimitExceeded'));
-        }
-
-        const newUid = database().ref().push().key;
-        const productRef = doc(db, `products/${newUid}`);
-        await setDoc(productRef, {
-            ...request,
-            id: newUid,
-            userId: user.uid,
-            createdAt: new Date(),
-        });
+     
         return request;
     } catch (error: any) {
         console.log('error', error);
@@ -150,25 +145,25 @@ export async function fetchUserProducts(): Promise<ProductType[]> {
     try {
         const currentUser = await getCurrentUser();
         if (!currentUser) {
-          throw new Error('User not found');
+            throw new Error('User not found');
         }
-    
+
         const productsRef = collection(db, 'products');
         const q = query(
-          productsRef,
-          where('userId', '==', currentUser.id)
+            productsRef,
+            where('userId', '==', currentUser.id)
         );
-    
+
         const querySnapshot = await getDocs(q);
         const products: ProductType[] = [];
-    
+
         querySnapshot.forEach((doc) => {
-          products.push({ id: doc.id, ...doc.data() } as ProductType);
+            products.push({ id: doc.id, ...doc.data() } as ProductType);
         });
-    
+
         return products;
-      } catch (error) {
+    } catch (error) {
         console.error('Error fetching user products:', error);
         throw error;
-      }
+    }
 }

@@ -29,4 +29,7 @@ export const RegisterValidator = zod.object({
     {
       message: i18n.t('enterConfirmPassword'),
     }),
+  termsAccepted: zod.boolean().refine(value => value === true, {
+    message: i18n.t('pleaseacceptterms'),
+  }),
 })

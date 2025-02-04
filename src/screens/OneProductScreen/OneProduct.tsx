@@ -49,7 +49,7 @@ const OneProduct = ({ route, navigation }: any) => {
   })
 
   const isAnonymous = auth.currentUser?.isAnonymous;
-
+  console.log('current user', userQuery.data?.email)
   return (
     <ScrollView style={styles.container}>
       <Image
@@ -92,7 +92,9 @@ const OneProduct = ({ route, navigation }: any) => {
         </View>
       </View>
       <PrimaryButton
-        label={isAnonymous ? i18n.t('login') : userQuery.data?.id === productQuery.data?.userId ? i18n.t('removeProduct') : i18n.t('chatWithOwner')}
+        label={isAnonymous ? i18n.t('login') :
+          userQuery.data?.id === productQuery.data?.userId ? i18n.t('removeProduct') :
+            i18n.t('chatWithOwner')}
         onPress={() =>
           isAnonymous ?
             logout() :
@@ -103,9 +105,24 @@ const OneProduct = ({ route, navigation }: any) => {
                 otherUserId: productQuery.data?.userId,
               })
         }
-        style={{ width: 200, textFont: 'bold', fontweight: 'bold', color: 'white' }}
+        style={{ width: 200, textFont: 'bold', fontweight: 'bold', color: 'white', marginBottom: 10 }}
       />
+      {
+        userQuery.data?.email === 'ashmosa123@gmail.com'  &&
+        userQuery.data?.id !== productQuery.data?.userId
+        &&
+        <PrimaryButton
+          label={i18n.t('removeProduct')}
+          onPress={() =>
+            deleteProductMutation.mutate()
 
+          }
+          style={{
+            width: 200, textFont: 'bold', fontweight: 'bold', color: 'white', backgroundColor: 'red',
+            marginBottom: 10,
+          }}
+        />
+      }
       <LoadingModal isVisible={deleteProductMutation.isPending ||
         productQuery.isLoading
       } />
@@ -118,6 +135,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f5f5f5',
     paddingBottom: 16,
+
   },
   image: {
     width: "90%",

@@ -111,7 +111,7 @@ export const sendMessage = async (messageToSend: Message, chatId: string) => {
 const sendEmail = async (email: string) => {
   try {
     const response = await axios.post(
-      "https://us-central1-book-store-16651.cloudfunctions.net/sendEmail",
+      "https://us-central1-book-store-c2ded.cloudfunctions.net/sendEmail",
       {
         to: email,
         subject: i18n.t('appName'),

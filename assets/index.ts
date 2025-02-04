@@ -14,7 +14,7 @@ import Profile from './profile.png'
 import Chat from './messenger.png'
 import LoginScreenImage from './loginScreenImage.png'
 import RegisterScreenImage from './registerScreenImage.png'
-
+import Check from './check.png'
 export {
     BestChoice,
     Setting,
@@ -31,5 +31,6 @@ export {
     Profile,
     Chat,
     LoginScreenImage,
-    RegisterScreenImage
+    RegisterScreenImage,
+    Check
 }

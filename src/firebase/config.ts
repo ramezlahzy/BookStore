@@ -14,13 +14,13 @@ import 'firebase/compat/auth';
 import { collection, addDoc, getDocs } from "firebase/firestore";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyB4R9IZzxNFrWYjtBKY41iDTm9en57KElA",
-  authDomain: "book-store-16651.firebaseapp.com",
-  projectId: "book-store-16651",
-  storageBucket: "book-store-16651.firebasestorage.app",
-  messagingSenderId: "806469254277",
-  appId: "1:806469254277:web:e6cddc9e31b6e41f607dec",
-  measurementId: "G-395W7SYN06"
+  apiKey: "AIzaSyD8EMggrcX6q5EQJaukJJ4IdtTAJeGV6E0",
+  authDomain: "book-store-c2ded.firebaseapp.com",
+  projectId: "book-store-c2ded",
+  storageBucket: "book-store-c2ded.firebasestorage.app",
+  messagingSenderId: "217887605432",
+  appId: "1:217887605432:web:40ba7b41680adc5398aa4d",
+  measurementId: "G-5H6YY1GTFJ"
 };
 const app = initializeApp(firebaseConfig);
 const storage = getStorage(app);

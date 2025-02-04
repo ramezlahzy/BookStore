@@ -39,9 +39,10 @@ const AddProductScreen = ({ navigation }:
         },
         onError: (error) => {
             console.log('Error:', error);
-            Alert.alert(i18n.t('error'), i18n.t('maxBookPerMonth'), [
-                { text: i18n.t('understood'), style: 'default' }
-            ]);
+            
+            // Alert.alert(i18n.t('error'), i18n.t('maxBookPerMonth'), [
+            //     { text: i18n.t('understood'), style: 'default' }
+            // ]);
         }
     });
     const mutationUploadPicture = useMutation({
@@ -52,17 +53,17 @@ const AddProductScreen = ({ navigation }:
     })
 
 
-    useEffect(() => {
-        const checkPermissions = async () => {
-            const hasPermission = await requestCameraPermission();
-            if (!hasPermission) {
-                console.log('Permission denied');
-                return;
-            }
-        };
+    // useEffect(() => {
+    //     const checkPermissions = async () => {
+    //         const hasPermission = await requestCameraPermission();
+    //         if (!hasPermission) {
+    //             console.log('Permission denied');
+    //             return;
+    //         }
+    //     };
     
-        checkPermissions();
-    }, []);
+    //     checkPermissions();
+    // }, []);
 
     return (
         <>

@@ -4,7 +4,7 @@ import React, { useCallback, useRef, useState } from 'react';
 import { Image, Text, TouchableOpacity, View } from 'react-native';
 import { useTheme } from '@react-navigation/native';
 import { BottomSheetModal, BottomSheetScrollView } from '@gorhom/bottom-sheet';
-import CustomBackdrop from '../../../components/CustomBackdrop';
+// import CustomBackdrop from '../../../components/CustomBackdrop';
 import FilterView from '../../../components/FilterView';
 import i18n from '../../../i18n';
 import { Minus, Setting } from "../../../../assets";
@@ -112,7 +112,7 @@ export const FilterButton = (
             snapPoints={["50%", "85%"]} // Example snap points
             index={0}
             ref={bottomSheetModalRef}
-            backdropComponent={(props) => <CustomBackdrop {...props} />}
+            // backdropComponent={(props) => <CustomBackdrop {...props} />}
             backgroundStyle={{
                 borderRadius: 24,
                 backgroundColor: 'white',
